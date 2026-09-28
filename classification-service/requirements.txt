@@ -1,0 +1,4 @@
+flask
+pillow        # image handling for screenshots / photos
+pytesseract   # OCR wrapper -- also needs the Tesseract binary (see README)
+pypdf         # optional: PDF fallback when `pdftotext` (poppler) is not installed

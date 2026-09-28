@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>SentryAI | Activity Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">S</span>
+      <div>
+        <h1>SentryAI</h1>
+        <p class="subtitle">AI activity monitoring</p>
+      </div>
+    </div>
+    <div class="status" id="connectionStatus" role="status" aria-live="polite">Connecting...</div>
+  </header>
+
+  <main>
+    <section class="page-heading" aria-labelledby="pageTitle">
+      <h2 id="pageTitle">Activity overview</h2>
+      <p>Monitor AI usage, review sensitive data requests, and track recent decisions.</p>
+    </section>
+
+    <section class="summary-cards" id="summaryCards" aria-label="Activity summary">
+      <div class="card"><div class="card-value" id="statTotal">-</div><div class="card-label">Total events</div></div>
+      <div class="card card-alert"><div class="card-value" id="statAlerts">-</div><div class="card-label">Allowed by user (sensitive data sent)</div></div>
+      <div class="card card-blocked"><div class="card-value" id="statBlocked">-</div><div class="card-label">Declined or blocked</div></div>
+      <div class="card"><div class="card-value" id="statRedacted">-</div><div class="card-label">Sent masked</div></div>
+      <div class="card"><div class="card-value" id="statTools">-</div><div class="card-label">AI tools seen</div></div>
+      <div class="card"><div class="card-value" id="statTopCategory">-</div><div class="card-label">Top risk category</div></div>
+    </section>
+
+    <section class="panel approvals-panel" aria-labelledby="approvalsTitle">
+      <div class="panel-header">
+        <div class="panel-heading-text">
+          <h2 id="approvalsTitle">Pending approvals <span class="pending-count" id="pendingCount">0</span></h2>
+          <p class="subtitle">Sensitive content stays on hold until it is reviewed.</p>
+        </div>
+      </div>
+      <div class="approvals-list" id="approvalsList"><p class="empty-state">Loading approvals...</p></div>
+    </section>
+
+    <section class="panel" aria-labelledby="activityTitle">
+      <div class="panel-header">
+        <div class="panel-heading-text">
+          <h2 id="activityTitle">Recent activity</h2>
+          <p class="subtitle">Latest events observed by SentryAI.</p>
+        </div>
+        <div class="panel-actions">
+          <button id="refreshBtn" type="button">Refresh</button>
+          <button id="notifyBtn" class="btn-notify" type="button">Enable desktop alerts</button>
+        </div>
+      </div>
+      <div class="activity-filters" aria-label="Filter recent activity">
+        <label>Date range
+          <select id="activityDateFilter">
+            <option value="all">All time (latest loaded)</option>
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="7days">Last 7 days</option>
+            <option value="10days" selected>Last 10 days</option>
+            <option value="custom">Custom range</option>
+          </select>
+        </label>
+        <div class="custom-date-range" id="customDateRange" hidden>
+          <label>From <input id="activityDateFrom" type="date"></label>
+          <label>To <input id="activityDateTo" type="date"></label>
+        </div>
+        <label>Decision
+          <select id="activityDecisionFilter">
+            <option value="all">All decisions</option>
+            <option value="alert">Alert · sensitive allowed</option>
+            <option value="blocked">Blocked / declined</option>
+            <option value="allow">Allowed · clean</option>
+            <option value="redacted">Masked &amp; sent</option>
+          </select>
+        </label>
+        <label>Activity type
+          <select id="activityTypeFilter">
+            <option value="all">All activity</option>
+            <option value="requests">Content requests</option>
+            <option value="content_submit">Text requests</option>
+            <option value="file_upload">File uploads</option>
+            <option value="page_visit">Page visits</option>
+          </select>
+        </label>
+        <label class="activity-search">Search
+          <input id="activitySearch" type="search" placeholder="Tool, user or category">
+        </label>
+        <button id="clearActivityFilters" class="secondary-btn" type="button">Reset filters</button>
+        <p id="activityFilterStatus" class="filter-status" aria-live="polite">Loading activity…</p>
+      </div>
+      <div class="table-wrap">
+        <table class="events-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>User</th>
+              <th>AI tool</th>
+              <th>Event</th>
+              <th>Categories</th>
+              <th>Decision</th>
+              <th>User choice</th>
+              <th>Detail (redacted)</th>
+            </tr>
+          </thead>
+          <tbody id="eventsBody">
+            <tr><td colspan="8" class="empty-state">Loading events...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="governance-grid" aria-label="Governance tools">
+      <article class="panel governance-panel">
+        <div class="panel-header"><div class="panel-heading-text"><h2>Internal incident report</h2><p class="subtitle">Draft record for security/compliance review; not automatically submitted.</p></div></div>
+        <form id="incidentForm" class="incident-form">
+          <label>Incident title<input name="title" required maxlength="160" placeholder="Sensitive data shared with an AI tool"></label>
+          <div class="form-row"><label>AI tool<input name="tool" placeholder="Unknown"></label><label>Severity<select name="severity"><option>low</option><option selected>medium</option><option>high</option><option>critical</option></select></label></div>
+          <div class="form-row"><label>Occurred at<input name="occurredAt" type="datetime-local"></label><label>People affected<input name="affectedPeople" type="number" min="0" placeholder="Unknown"></label></div>
+          <label>Data categories (comma separated)<input name="dataCategories" placeholder="CUSTOMER_DATA, HEALTH_DATA"></label>
+          <label>Containment / actions<textarea name="containment" rows="2"></textarea></label>
+          <label>Notes<textarea name="notes" rows="2"></textarea></label>
+          <div class="form-actions"><button class="secondary-btn" type="submit">Save internal draft</button><button class="secondary-btn" id="exportIncidents" type="button">Export incident drafts</button></div>
+          <p id="incidentStatus" class="form-status" aria-live="polite"></p>
+        </form>
+      </article>
+      <article class="panel governance-panel register-panel">
+        <div class="panel-header"><div class="panel-heading-text"><h2>AI processing register</h2><p class="subtitle">Aggregated from logged activity. Purpose and department are not collected; destination is unverified.</p></div><button id="exportRopa" class="secondary-btn" type="button">Export register JSON</button></div>
+        <div class="table-wrap"><table class="events-table"><thead><tr><th>Tool</th><th>Data category</th><th>Activities</th><th>First / last observed</th><th>Destination</th></tr></thead><tbody id="ropaBody"><tr><td colspan="5" class="empty-state">Loading register...</td></tr></tbody></table></div>
+      </article>
+      <article class="panel governance-panel framework-panel">
+        <div class="panel-header"><div class="panel-heading-text"><h2>Framework coverage</h2><p class="subtitle">Control mapping is a review aid; applicability must be confirmed for each organization.</p></div></div>
+        <div class="framework-list">
+          <div><strong><a href="https://www.indiacode.nic.in/bitstream/123456789/22037/2/a2023-22.pdf" target="_blank" rel="noreferrer">DPDP Act, 2023</a></strong><span>Primary mapping · staged commencement: substantive duties are scheduled 18 months after 13 Nov 2025. Evidence here is a support tool, not a compliance finding.</span></div>
+          <div><strong><a href="https://www.cert-in.org.in/Directions70B.jsp" target="_blank" rel="noreferrer">CERT-In Directions, 2022</a></strong><span>Specified Annexure-I cyber incidents have a six-hour reporting requirement for covered entities. SentryAI activity is a detection signal, not by itself a confirmed reportable breach. Draft captures discovery time, impact estimate, category and containment; owner must assess and submit. <a href="https://www.cert-in.org.in/PDF/FAQs_on_CyberSecurityDirections_May2022.pdf" target="_blank" rel="noreferrer">CERT-In FAQ</a></span></div>
+          <div><strong><a href="https://rbi.org.in/Scripts/NotificationUser.aspx?Id=11244" target="_blank" rel="noreferrer">RBI payment-data direction</a> · <a href="https://www.rbi.org.in/Scripts/BS_ViewMasDirections.aspx?id=12486" target="_blank" rel="noreferrer">IT outsourcing</a></strong><span>For covered payment-system providers, payment-system data must be stored in India; RBI IT-outsourcing directions apply to specified regulated entities, including NBFCs. This MVP flags destination as unverified; it cannot prove vendor geography or localization. Not a blanket localization claim for every fintech or financial record.</span></div>
+          <div><strong><a href="https://irdai.gov.in/document-detail?documentId=3314780" target="_blank" rel="noreferrer">IRDAI 2023 Information &amp; Cyber Security</a></strong><span>Insurance regulated-entity scope · this MVP supplies monitored AI-use events and an internal incident draft for review; applicability and required reporting must be confirmed against current IRDAI circulars.</span></div>
+          <div><strong><a href="https://www.sebi.gov.in/sebi_data/attachdocs/aug-2024/1724326790365.pdf" target="_blank" rel="noreferrer">SEBI CSCRF, 2024</a></strong><span>SEBI-regulated entity scope · event monitoring and incident-record evidence can support review; it does not replace SOC, incident portal submission, RCA or other CSCRF controls.</span></div>
+          <div><strong><a href="https://www.pib.gov.in/PressReleasePage.aspx?PRID=2186639&amp;lang=2&amp;reg=48" target="_blank" rel="noreferrer">India AI Governance Guidelines</a> (MeitY, 5 Nov 2025)</strong><span>Released as a principle-based national framework, not a new statutory compliance certificate. Partial alignment evidence: accountable AI-use policy, privacy/risk alerts, human approval and auditable decisions. No model fairness, explainability or safety evaluation is performed by this MVP.</span></div>
+        </div>
+        <p class="governance-note">This MVP does not certify compliance. Destination country is unverified unless supported by vendor and account-specific evidence.</p>
+      </article>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

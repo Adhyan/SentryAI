@@ -1,0 +1,46 @@
+# SentryAI — Docker Compose (Phase-2 reference)
+#
+# NOT required to run the MVP — see README.md for the zero-dependency
+# local setup (plain `node` + `python3`, no Docker, no internet needed).
+#
+# This file documents the production-shaped stack from the architecture
+# doc (Section 3: MongoDB + Redis instead of the JSON-file store, real
+# Presidio-based classification, etc.) for when you're ready to move
+# past the MVP. It requires internet access to pull base images and
+# install packages, and MongoDB/Redis are not wired into the MVP code
+# yet — see "Production upgrade path" notes in api/src/db.js and
+# classification-service/recognizers.py for what changes.
+
+version: "3.9"
+
+services:
+  mongodb:
+    image: mongo:7
+    ports: ["27017:27017"]
+    volumes: ["mongo_data:/data/db"]
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  classification-service:
+    build: ./classification-service
+    ports: ["5001:5001"]
+    environment:
+      - FLASK_ENV=production
+
+  api:
+    build: ./api
+    ports: ["3000:3000"]
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/sentryai
+      - REDIS_URL=redis://redis:6379
+      - CLASSIFY_HOST=classification-service
+      - CLASSIFY_PORT=5001
+    depends_on:
+      - mongodb
+      - redis
+      - classification-service
+
+volumes:
+  mongo_data:

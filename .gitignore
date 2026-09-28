@@ -1,0 +1,17 @@
+# Data store (JSON-file MVP database — never commit real event data)
+api/data/*.json
+
+# Node
+node_modules/
+npm-debug.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
